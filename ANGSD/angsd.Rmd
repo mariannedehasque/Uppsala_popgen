@@ -1,0 +1,27 @@
+---
+title: "angsd"
+output: github_document
+date: "2024-01-17"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Genotype Likelihoods
+
+```{bash, eval = FALSE}
+angsd -bam $INPUTFILE \
+  -GL 1 \
+  -nThreads 16 \
+  -doGlf 2 \
+  -doMajorMinor 1 \
+  -SNP_pval 1e-6 \
+  -doMaf 1 \
+  -minMapQ 30 -minQ 30 \
+  -uniqueOnly 1 -remove_bads 1 \
+  -sites $SITESFILE \
+	-ref $REFERENCE \
+	-out $DIR/$INPUT
+
+```
