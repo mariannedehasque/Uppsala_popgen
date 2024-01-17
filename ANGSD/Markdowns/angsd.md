@@ -10,7 +10,12 @@ ANGSD
   - [Prepare the input files](#prepare-the-input-files)
   - [Run ngsLD](#run-ngsld)
   - [LD pruning](#ld-pruning)
-    - [Generate an LD-pruned SNP list](#generate-an-ld-pruned-snp-list)
+    - [Run ngsLD scripts](#run-ngsld-scripts)
+    - [Generate an LD-pruned SNP list for
+      ANGSD](#generate-an-ld-pruned-snp-list-for-angsd)
+  - [PCangsd](#pcangsd)
+  - [NgsAdmix](#ngsadmix)
+    - [Determine optimal K](#determine-optimal-k)
 
 # Genotype Likelihoods
 
@@ -170,6 +175,8 @@ Important ngsLD parameters:
 
 ## LD pruning
 
+### Run ngsLD scripts
+
 For many downstream analyses, independence among different SNPs is often
 assumed, so it is important to generate a list of SNPs that are in low
 LD with each other. To do this, we can use the `prune_graph.pl` script
@@ -188,31 +195,55 @@ include:
 
 ``` bash
 
-perl $NGSLD/scripts/prune_graph.pl \
---in_file $BASEDIR/ngsld/MME_ANGSD_PCA_subsampled.ld \
+perl prune_graph.pl \
+--in_file $OUTDIR/${INPUT}.ld \
 --max_kb_dist 2000 \
 --min_weight 0.5 \
---out $BASEDIR/ngsld/MME_ANGSD_PCA_subsampled_unlinked.id
+--out $OUTDIR/${INPUT}.unsampled.id
 ```
-
-Check the LD pruning result. How many SNPs survived the LD pruning
-process and how many were lost?
 
 <br>
 
-### Generate an LD-pruned SNP list
+### Generate an LD-pruned SNP list for ANGSD
 
-We will use R to generate an LD-pruned SNP list in a format that can be
-used by ANGSD for downstream analyses.
+R is used to generate an LD-pruned SNP list in a format that can be used
+by ANGSD for downstream analyses.
 
 ``` r
-basedir="~/lcwgs-guide-tutorial/tutorial3_ld_popstructure/"
+pruned_position <- as.integer(gsub("Mme_chr24_2558528-4558528:", "", readLines(paste0(basedir, "$OUTDIR/${INPUT}.unsampled.id"))))
 
-pruned_position <- as.integer(gsub("Mme_chr24_2558528-4558528:", "", readLines(paste0(basedir, "ngsld/MME_ANGSD_PCA_subsampled_unlinked.id"))))
-
-snp_list <- read.table(paste0(basedir, "angsd/MME_ANGSD_PCA.mafs.gz"), stringsAsFactors = F, header = T)[,1:4]
+snp_list <- read.table(paste0(basedir, "$INDIR/${INPUT}.mafs.gz"), stringsAsFactors = F, header = T)[,1:4]
 
 pruned_snp_list <- snp_list[snp_list$position %in% pruned_position, ]
   
-write.table(pruned_snp_list, paste0(basedir, "ngsld/LDpruned_snps.list"), col.names = F, row.names = F, quote = F, sep = "\t")
+write.table(pruned_snp_list, paste0(basedir, "${OUTDIR}/${INPUT}.LDpruned_snps.list"), col.names = F, row.names = F, quote = F, sep = "\t")
+```
+
+## PCangsd
+
+## NgsAdmix
+
+### Determine optimal K
+
+``` r
+#read in the data
+data<-list.files("~/Library/CloudStorage/OneDrive-Personal/CTS/Rscripts/ANGSD/Mouflon_domestic_NgsAdmix/", pattern = ".log", full.names = T)
+
+#use lapply to read in all our log files at once
+bigData<-lapply(1:6, FUN = function(i) readLines(data[i]))
+
+# find the line that starts with "best like=" or just "b"
+library(stringr)
+
+#this will pull out the line that starts with "b" from each file and return it as a list
+foundset<-sapply(1:6, FUN= function(x) bigData[[x]][which(str_sub(bigData[[x]], 1, 1) == 'b')])
+
+#make a dataframe with an index 1:7, this corresponds to our K values
+logs<-data.frame(K = rep(2:7, each=1))
+
+#add to it our likelihood values
+logs$like<-as.vector(as.numeric( sub("\\D*(\\d+).*", "\\1", foundset) ))
+
+#and now we can calculate our delta K and probability
+tapply(logs$like, logs$K, FUN= function(x) mean(abs(x))/sd(abs(x)))
 ```
