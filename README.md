@@ -1,3 +1,3 @@
 # EuropeanMouflon
 
-Repository to track analyseses for European Mouflon project
+Repository to track analyses for European Mouflon project
