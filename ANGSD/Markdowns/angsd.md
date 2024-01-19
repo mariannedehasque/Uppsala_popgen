@@ -145,44 +145,41 @@ zcat $INDIR/${INPUT}.mafs.gz | cut -f 1,2 | tail -n +2 | gzip > $OUTDIR/${INPUT}
 
 ## Run ngsLD
 
+$\color{red}{\text{IMPORTANT}}$: make sure to not set both `max_kb_dist`
+and `max_snp_dist` to 0. ngsLD will output all comparisons, resulting in
+humongous files (several Tb)
+
 ``` bash
 #!/bin/bash -l
 
+zcat $OUTDIR/${INPUT}.geno.beagle.gz | grep ${CHROM} | gzip > $OUTDIR/${INPUT}.geno.beagle.${CHROM}.gz
+zcat $OUTDIR/${INPUT}.pos.gz | grep ${CHROM} | gzip > $OUTDIR/${INPUT}.pos.${CHROM}.gz
+
+N=$(zcat $OUTDIR/${INPUT}.pos.${CHROM}.gz | wc -l)
+
 ngsLD \
---geno $OUTDIR/${INPUT}.geno.beagle.gz \
---pos $OUTDIR/${INPUT}.pos.gz \
+--geno ${OUTDIR}/${INPUT}.geno.beagle.${CHROM}.gz \
+--pos ${OUTDIR}/${INPUT}.pos.${CHROM}.gz \
 --probs \
 --n_ind 76 \
---n_sites 1134 \
+--n_sites ${N} \
 --max_kb_dist 0 \
---n_threads 16 \
---out $OUTDIR/${INPUT}.ld
+--n_threads 8 \
+--min_maf 0.05 --max_snp_dist 100 \
+--out ${OUTDIR}/${INPUT}.${CHROM}.ld 
 ```
 
-Important ngsLD parameters:
+ngsLD parameters:
 
-- `--probs`: specification of whether the input is genotype
-  probabilities (likelihoods or posteriors)?
-- `--n_ind INT`: sample size (number of individuals).
-- `--n_sites INT`: total number of sites. To get this information, do
-  `bash zcat ${INPUT}.pos.gz | wc -l`.
+- `--probs`: add to indicate that input are genotype likelihoods
 - `--max_kb_dist DOUBLE`: maximum distance between SNPs (in Kb) to
-  calculate LD. Set to 0(zero) to disable filter. \[100\]
+  calculate LD. Set to 0(zero) to disable filter
 - `--max_snp_dist INT`: maximum distance between SNPs (in number of
-  SNPs) to calculate LD. Set to 0 (zero) to disable filter. \[0\]
-- `--n_threads INT`: number of threads to use. \[1\]
-- `--out FILE`: output file name. \[stdout\]
+  SNPs) to calculate LD. Set to 0 (zero) to disable filter
 
 ## LD pruning
 
 ### Run ngsLD scripts
-
-For many downstream analyses, independence among different SNPs is often
-assumed, so it is important to generate a list of SNPs that are in low
-LD with each other. To do this, we can use the `prune_graph.pl` script
-provided in ngsLD. This script takes the LD estimation output (in our
-case `MME_ANGSD_PCA.ld`) as its input. Some important parameters
-include:
 
 - `--max_kb_dist INT`: Maximum distance between nodes (ie. SNPs, input
   file 3rd column) to assume they are connected
@@ -210,7 +207,7 @@ R is used to generate an LD-pruned SNP list in a format that can be used
 by ANGSD for downstream analyses.
 
 ``` r
-pruned_position <- as.integer(gsub("Mme_chr24_2558528-4558528:", "", readLines(paste0(basedir, "$OUTDIR/${INPUT}.unsampled.id"))))
+pruned_position <- as.integer(gsub("GCF_016772045.1_ARS-UI_Ramb_v2.0_genomic.repma.autos:", "", readLines(paste0(basedir, "$OUTDIR/${INPUT}.unsampled.id"))))
 
 snp_list <- read.table(paste0(basedir, "$INDIR/${INPUT}.mafs.gz"), stringsAsFactors = F, header = T)[,1:4]
 

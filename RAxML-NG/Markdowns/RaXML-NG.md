@@ -2,6 +2,23 @@ RAxML-NG
 ================
 2024-01-17
 
-The first step is to convert the merged and filtered bcf file to a
-fasta. As I didn’t find a tool that does this exactly the way I want, I
-wrote a python script to do the conversion: `BCF2FASTA.chrom.py`
+The first step is to convert the merged and filtered bcf file to fasta
+format. As all samples are filtered for the same positions, this is
+effectively the same as doing a multisample alignment (msa). As I didn’t
+find a tool that does this exactly the way I want, I wrote a python
+script to do the conversion: `BCF2FASTA.chrom.py`.  
+
+Before running the script, the merged and filtered bcf file must be
+split per sample using: `bcftools_sample.sh`
+
+The script does the following:  
+
+- Read a filtered sample vcf.gz file  
+- Write the information from the vcf.gz file into a consensus fasta file
+  with following rules:  
+  - Genotype 0/0 gets translated into reference allele  
+  - Genotype 0/1 gets translated randomly into either reference or alt
+    allele  
+  - Genotype 1/1 get translated into alt allele  
+  - Missing genotypes get translated as “N”  
+- Generate a fasta file per chromosome
