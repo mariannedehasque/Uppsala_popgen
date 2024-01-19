@@ -113,7 +113,8 @@ zcat $INDIR/${INPUT}.mafs.gz | cut -f 1,2 | tail -n +2 | gzip > $OUTDIR/${INPUT}
 ## Run ngsLD
 $\color{red}{\text{IMPORTANT}}$: make sure to not set both `max_kb_dist` and `max_snp_dist` to 0. ngsLD will output all comparisons, resulting in humongous files (several Tb)
 
---> current problem: with max_kb_dist = 1000 and max_snp_dist = 0, analysis does not seem to finnish 
+--> analysis generates huge files with max_kb_dist = 1000
+--> trying max_kb_dist = 100
 
 ```{bash eval = FALSE}
 #!/bin/bash -l
