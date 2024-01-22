@@ -1,0 +1,120 @@
+---
+title: "angsd_IBS"
+output: 
+  github_document:
+    toc: true
+    toc_depth: 3
+date: "2024-01-22"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Script modified from Edana
+
+```{bash, eval = FALSE}
+module load bioinfo-tools
+module load ANGSD/0.940-stable
+
+date
+
+#parameters
+INPUT="Mouflon_domestic_wild_goat"
+DIR="/proj/snic2020-2-10/private/Analyses/marianne/PROJECTS/EuropeanMouflon/ANGSD"
+INPUTFILE="/proj/snic2020-2-10/private/Analyses/marianne/PROJECTS/EuropeanMouflon/ANGSD/${INPUT}.list"
+INPUTFILE2="/proj/snic2020-2-10/private/Analyses/marianne/PROJECTS/EuropeanMouflon/ANGSD/${INPUT}.2.list"
+SITESFILE="/proj/snic2020-2-10/private/Analyses/marianne/PROJECTS/EuropeanMouflon/ANGSD/GCF_016772045.1_ARS-UI_Ramb_v2.0_genomic.repma.autos.angsd.file"
+
+#angsd options
+#bam = list of bam files
+#doIBS 1 = single base from each individual at each postion, use randomly sampled base (change to 2 for consensus base)
+#doCounts 1 = counts number of bases at each position
+#makeMatrix 1 = prints out identity-by-state matrix (average distance between pairs)
+#sites {file} = only print positions included in file
+#minMapQ 30 = minimum mapping quality 30
+#minQ 30 = minimum base quality 30
+#doMajorMinor 1 = only use diallelic sites
+#uniqueOnly 1 = remove reads with mutliple best hits
+#remove_bads 1 = remove reads with flag above 255 (not primary, failure and duplicate reads)
+#minInd = number of individuals with at least 1 read covering each site
+#nThreads = number of threads to use
+#out = name of output file, angsd will add appropriate file extensions
+#GL 1 = samtools model of genotype likelihoods
+
+# main tree
+echo "constructing IBS matrix"
+
+angsd -bam $INPUTFILE \
+-doIBS 1 -doCounts 1 -makeMatrix 1 \
+-GL 1 \
+-minMapQ 30 -minQ 30 \
+-doMajorMinor 1 \
+-uniqueOnly 1 \
+-remove_bads 1 \
+-minInd 87 \
+-nThreads 16 \
+-sites $SITESFILE \
+-out $DIR/$INPUT
+
+date
+
+# transform matrix to FastME format
+# here use a list of bams with only names and no file paths
+echo "transforming to fastme format"
+
+(echo '97'
+paste -d" " $INPUTFILE2 <(sed -e 's/\t/  /g' ${INPUT}.ibsMat)
+echo "")> ${INPUT}_fastme.ibsMat
+
+```
+
+Generates following error:
+```{bash, eval = FALSE}
+[E::bgzf_read_block] Failed to read BGZF block data at offset 5648624822 expected 12125 bytes; hread returned 0 \
+[E::bgzf_read] Read block operation failed with error 4 after 69 of 306 bytes \
+	-> Need XO tag to calculate the number of best hits \
+```
+
+`while read line; do samtools quickcheck -qvvv $line; done < Mouflon_domestic_wild_goat.list`
+
+```{bash, eval = FALSE}
+checking /crex/proj/snic2020-2-10/private/Data/Non-Human/Animals/sheep/BAM_files/ARS-UI_Ramb_v2.0/BAM_FILES/external/Li2023/WDU1.ARS-UI_Ramb_v2.0.bam
+opened /crex/proj/snic2020-2-10/private/Data/Non-Human/Animals/sheep/BAM_files/ARS-UI_Ramb_v2.0/BAM_FILES/external/Li2023/WDU1.ARS-UI_Ramb_v2.0.bam
+/crex/proj/snic2020-2-10/private/Data/Non-Human/Animals/sheep/BAM_files/ARS-UI_Ramb_v2.0/BAM_FILES/external/Li2023/WDU1.ARS-UI_Ramb_v2.0.bam is sequence data
+/crex/proj/snic2020-2-10/private/Data/Non-Human/Animals/sheep/BAM_files/ARS-UI_Ramb_v2.0/BAM_FILES/external/Li2023/WDU1.ARS-UI_Ramb_v2.0.bam has 142 targets in header.
+/crex/proj/snic2020-2-10/private/Data/Non-Human/Animals/sheep/BAM_files/ARS-UI_Ramb_v2.0/BAM_FILES/external/Li2023/WDU1.ARS-UI_Ramb_v2.0.bam was missing EOF block when one should be present
+```
+
+Script had been running for multiple days, try following modifications:
+
+* Remove sample WDU1 from analysis. This sample is not super important in the first place.
+* Run the analysis per chromosome to reduce time.
+
+```{bash, eval = FALSE}
+while read line
+do
+  BAM=$(basename $line)
+  NAME=$(echo $BAM| cut -d "." -f1)
+  samtools view -ob ${TMPDIR}/${NAME}_NC_056079.1.bam $line NC_056079.1
+  echo "${TMPDIR}/${NAME}_NC_056079.1.bam" >> ${TMPDIR}/filelist.txt
+  echo "${NAME}_NC_056079.1.bam" >> ${TMPDIR}/filelist2.txt
+done < $INPUTFILE
+
+# main tree
+echo "constructing IBS matrix"
+
+angsd -bam ${TMPDIR}/filelist.txt \
+-doIBS 1 -doCounts 1 -makeMatrix 1 \
+-GL 1 \
+-minMapQ 30 -minQ 30 \
+-doMajorMinor 1 \
+-uniqueOnly 1 \
+-remove_bads 1 \
+-minInd 87 \
+-nThreads 16 \
+-sites $SITESFILE \
+-out $DIR/$INPUT
+
+date
+```
