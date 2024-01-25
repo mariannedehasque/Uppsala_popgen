@@ -1,0 +1,138 @@
+snpEff
+================
+2024-01-25
+
+\#Build database Filter gtf file
+
+``` bash
+#!/bin/bash -l
+#SBATCH -A snic2022-22-949
+#SBATCH -p core -n 2
+#SBATCH -J Gffread_filter
+#SBATCH -t 0-08:00:00
+
+module load bioinfo-tools cufflinks
+
+gtf='/proj/snic2020-2-10/private/Data/Non-Human/Animals/sheep/ref_seqs/ARS-UI_Ramb_v2.0/GCF_016772045.1_ARS-UI_Ramb_v2.0_genomic.gtf'
+ref='/proj/snic2020-2-10/private/Data/Non-Human/Animals/sheep/ref_seqs/ARS-UI_Ramb_v2.0/GCF_016772045.1_ARS-UI_Ramb_v2.0_genomic.fna'
+dir='/proj/snic2020-2-10/private/Data/Non-Human/Animals/sheep/BAM_files/ARS-UI_Ramb_v2.0/snpEff'
+
+cd $dir
+
+gffread $gtf -F -V -g $ref -T -o GCF_016772045.1_ARS-UI_Ramb_v2.0.filtered.gtf
+gffread $gtf -F -V -g $ref -o GCF_016772045.1_ARS-UI_Ramb_v2.0.filtered.gff
+```
+
+Flags:
+
+- -V: discard any mRNAs with CDS having in-frame stop codons
+- -F: full GFF attribute preservation (all attributes are shown)
+- -T: -o option will output GTF format instead of GFF3
+
+Build the snpEff database:
+
+``` bash
+#!/bin/bash -l
+#SBATCH -A snic2022-22-949
+#SBATCH -p core -n 2
+#SBATCH -J snpEff_db
+#SBATCH -t 0-08:00:00
+
+ml bioinfo-tools java/OpenJDK_12+32
+
+#### IMPORTANT - /data directory should be in same directory as snpEff installation
+
+gtf='/proj/snic2020-2-10/private/Data/Non-Human/Animals/sheep/ref_seqs/ARS-UI_Ramb_v2.0/GCF_016772045.1_ARS-UI_Ramb_v2.0.filtered.gtf'
+ref='/proj/snic2020-2-10/private/Data/Non-Human/Animals/sheep/ref_seqs/ARS-UI_Ramb_v2.0/GCF_016772045.1_ARS-UI_Ramb_v2.0_genomic.fna'
+cds='/proj/snic2020-2-10/private/Data/Non-Human/Animals/sheep/ref_seqs/ARS-UI_Ramb_v2.0/GCF_016772045.1_ARS-UI_Ramb_v2.0_cds_from_genomic.fna.gz'
+prot='/proj/snic2020-2-10/private/Data/Non-Human/Animals/sheep/ref_seqs/ARS-UI_Ramb_v2.0/GCF_016772045.1_ARS-UI_Ramb_v2.0_protein.faa.gz'
+data_dir='/proj/snic2020-2-10/private/Data/Non-Human/Animals/sheep/ref_seqs/ARS-UI_Ramb_v2.0/snpEff/snpEff-5.0/data'
+db_dir='/proj/snic2020-2-10/private/Data/Non-Human/Animals/sheep/ref_seqs/ARS-UI_Ramb_v2.0/snpEff/snpEff-5.0'
+snpEff='/proj/snic2020-2-10/private/Data/Non-Human/Animals/sheep/ref_seqs/ARS-UI_Ramb_v2.0/snpEff/snpEff-5.0/snpEff'
+
+
+#prepare db build with soft links
+ln -s $gtf ${data_dir}/ARS-UI_Ramb_v2.0/genes.gtf &&
+ln -s $ref ${data_dir}/ARS-UI_Ramb_v2.0/sequences.fa &&
+ln -s $prot ${data_dir}/ARS-UI_Ramb_v2.0/protein.fa.gz &&
+ln -s $cds ${data_dir}/ARS-UI_Ramb_v2.0/cds.fa.gz
+
+#update snpEff config
+cp `find ~/ -name snpEff.config -print | head -n 1` ${db_dir}/snpEff.config &&
+echo '#ARS-UI_Ramb_v2.0 genome, version ARS-UI_Ramb_v2.0' >> ${db_dir}/snpEff.config &&
+echo 'ARS-UI_Ramb_v2.0.genome : ARS-UI_Ramb_v2.0' >> ${db_dir}/snpEff.config
+
+#build snpEff database
+cd $db_dir
+
+java -jar ${snpEff}.jar build -gtf22 -v ARS-UI_Ramb_v2.0 -noCheckCds -noCheckProtein
+```
+
+Building the database can be tricky, so make sure to check the
+[snpEff](https://pcingola.github.io/SnpEff/snpeff/build_db/)
+documentation when running into problems.
+
+Run snpEff:
+
+``` bash
+#!/bin/bash -l
+#SBATCH -A naiss2023-22-799
+#SBATCH -p core -n 2
+#SBATCH -J snpsift
+#SBATCH -t 2-00:00:00
+
+module load bioinfo-tools bcftools/1.14 samtools/1.14
+module load BEDTools/2.29.2
+module load tabix/0.2.6
+module load java/OpenJDK_12+32
+
+INPUT='MOUFLON_downsampled.Q30.sorted.G5.D3.noIndel.annot.repma.Fmiss0.2.snps.bcf'
+DIR='/proj/snic2020-2-10/private/Data/Non-Human/Animals/sheep/BAM_files/ARS-UI_Ramb_v2.0/VCF_PANELS/bcftools_mpileup_downsampled/merged'
+SAMPLE=${1}
+gtf='/proj/snic2020-2-10/private/Data/Non-Human/Animals/sheep/ref_seqs/ARS-UI_Ramb_v2.0/GCF_016772045.1_ARS-UI_Ramb_v2.0.filtered.gtf'
+ref='/proj/snic2020-2-10/private/Data/Non-Human/Animals/sheep/ref_seqs/ARS-UI_Ramb_v2.0/GCF_016772045.1_ARS-UI_Ramb_v2.0_genomic.fna'
+data_dir='/proj/snic2020-2-10/private/Data/Non-Human/Animals/sheep/BAM_files/ARS-UI_Ramb_v2.0/VCF_PANELS/bcftools_mpileup_downsampled'
+db_dir='/proj/snic2020-2-10/private/Data/Non-Human/Animals/sheep/ref_seqs/ARS-UI_Ramb_v2.0/snpEff/snpEff-5.0'
+snpEff='/proj/snic2020-2-10/private/Data/Non-Human/Animals/sheep/ref_seqs/ARS-UI_Ramb_v2.0/snpEff/snpEff-5.0/snpEff'
+
+cd $DIR
+
+bcftools view -s $SAMPLE -Ob -o $TMPDIR/${SAMPLE}.Q30.sorted.G5.D3.noIndel.annot.repma.Fmiss0.2.snps.bcf $DIR/$INPUT
+bcftools index $TMPDIR/${SAMPLE}.Q30.sorted.G5.D3.noIndel.annot.repma.Fmiss0.2.snps.bcf
+bcftools convert -O v -o $TMPDIR/${SAMPLE}.Q30.sorted.G5.D3.noIndel.annot.repma.Fmiss0.2.snps.vcf $TMPDIR/${SAMPLE}.Q30.sorted.G5.D3.noIndel.annot.repma.Fmiss0.2.snps.bcf
+
+java -Xmx8g -jar ${snpEff}.jar -treatAllAsProteinCoding -v -d -lof ARS-UI_Ramb_v2.0 $TMPDIR/${SAMPLE}.Q30.sorted.G5.D3.noIndel.annot.repma.Fmiss0.2.snps.vcf > $data_dir/snpeff/${SAMPLE}.Q30.sorted.G5.D3.noIndel.annot.repma.Fmiss0.2.snps.snpeff.vcf
+
+snpSift="/proj/snic2020-2-10/private/Data/Non-Human/Animals/sheep/ref_seqs/ARS-UI_Ramb_v2.0/snpEff/snpEff-5.0/SnpSift.jar"
+dir='/proj/snic2020-2-10/private/Data/Non-Human/Animals/sheep/BAM_files/ARS-UI_Ramb_v2.0/VCF_PANELS/bcftools_mpileup/snpeff'
+
+java -jar $snpSift extractFields $data_dir/snpeff/${SAMPLE}.Q30.sorted.G5.D3.noIndel.annot.repma.Fmiss0.2.snps.snpeff.vcf CHROM POS REF ALT "GEN[*].GT" "ANN[*].IMPACT" "ANN[*].EFFECT" | awk '{print $1,$2,$3,$4,$5,$6}' > $data_dir/snpeff/${SAMPLE}.Q30.sorted.G5.D3.noIndel.annot.repma.Fmiss0.2.snps.snpeff.snpsift.vcf
+
+HOMO_HIGH=$(cat $data_dir/snpeff/${SAMPLE}.Q30.sorted.G5.D3.noIndel.annot.repma.Fmiss0.2.snps.snpeff.snpsift.vcf| grep -v "NW" | grep -v "NC_056080.1" | grep -v "NC_001941.1" | grep "1/1" |grep "HIGH" |  wc -l)
+HETERO_HIGH=$(cat $data_dir/snpeff/${SAMPLE}.Q30.sorted.G5.D3.noIndel.annot.repma.Fmiss0.2.snps.snpeff.snpsift.vcf| grep -v "NW" | grep -v "NC_056080.1" | grep -v "NC_001941.1"  |grep "0/1" | grep "HIGH" |  wc -l)
+HOMO_MODERATE=$(cat $data_dir/snpeff/${SAMPLE}.Q30.sorted.G5.D3.noIndel.annot.repma.Fmiss0.2.snps.snpeff.snpsift.vcf| grep -v "NW" | grep -v "NC_056080.1" | grep -v "NC_001941.1"  |grep "1/1" | grep "MODERATE" |  wc -l)
+HETERO_MODERATE=$(cat $data_dir/snpeff/${SAMPLE}.Q30.sorted.G5.D3.noIndel.annot.repma.Fmiss0.2.snps.snpeff.snpsift.vcf| grep -v "NW" | grep -v "NC_056080.1" | grep -v "NC_001941.1"  |grep "0/1" | grep "MODERATE" |  wc -l)
+HOMO_LOW=$(cat $data_dir/snpeff/${SAMPLE}.Q30.sorted.G5.D3.noIndel.annot.repma.Fmiss0.2.snps.snpeff.snpsift.vcf| grep -v "NW" | grep -v "NC_056080.1" | grep -v "NC_001941.1"  |grep "1/1" | grep "LOW" |  wc -l)
+HETERO_LOW=$(cat $data_dir/snpeff/${SAMPLE}.Q30.sorted.G5.D3.noIndel.annot.repma.Fmiss0.2.snps.snpeff.snpsift.vcf| grep -v "NW" | grep -v "NC_056080.1" | grep -v "NC_001941.1"  |grep "0/1" | grep "LOW" |  wc -l)
+HOMO_MODIFIER=$(cat $data_dir/snpeff/${SAMPLE}.Q30.sorted.G5.D3.noIndel.annot.repma.Fmiss0.2.snps.snpeff.snpsift.vcf| grep -v "NW" | grep -v "NC_056080.1" | grep -v "NC_001941.1"  |grep "1/1" | grep "MODIFIER" |  wc -l)
+HETERO_MODIFIER=$(cat $data_dir/snpeff/${SAMPLE}.Q30.sorted.G5.D3.noIndel.annot.repma.Fmiss0.2.snps.snpeff.snpsift.vcf| grep -v "NW" | grep -v "NC_056080.1" | grep -v "NC_001941.1"  |grep "0/1" | grep "MODIFIER" |  wc -l)
+SNPS=$(cat $data_dir/snpeff/${SAMPLE}.Q30.sorted.G5.D3.noIndel.annot.repma.Fmiss0.2.snps.snpeff.snpsift.vcf| grep -v "NW" | grep -v "NC_056080.1" | grep -v "NC_001941.1"  |grep -E "1/1|0/1"| wc -l)
+echo ${1} $HOMO_HIGH $HETERO_HIGH $HOMO_MODERATE $HETERO_MODERATE $HOMO_LOW $HETERO_LOW $HOMO_MODIFIER $HETERO_MODIFIER $SNPS >> $data_dir/snpeff/${SAMPLE}.snpeff.results.txt
+```
+
+The script consists of following steps:
+
+- Create `BCF file` for each sample
+- Convert each sample BCF file to a `VCF file`
+- Annotate the sample VCF file with `snpEff`
+- Extract the relevant fields (i.e. impact) and reformat annotated
+  sample VCF with `snpSift`
+- Calculate load per impact factor with counts while excluding unplaced
+  contigs (`"NW"`), chrX (`"NC_056080.1"`), and the mitogenome
+  (`"NC_001941.1"`)
+
+Run the script on the command line as follows:
+
+``` bash
+for sample in sample1 sample2 sample3; do sbatch snpEff.sh $sample; done
+```

@@ -6,6 +6,7 @@ Bcftools
   - [Bcftools mpileup](#bcftools-mpileup)
   - [Quality filtering](#quality-filtering)
 - [Quality control](#quality-control)
+- [Filtering BCF/VCF file](#filtering-bcfvcf-file)
 
 # Genotyping
 
@@ -140,4 +141,27 @@ module load bioinfo-tools MultiQC/1.7
 DIR=''
 
 multiqc -f $DIR/stats/ -o $DIR/stats/multiqc
+```
+
+Inspecting missingness per individual:
+
+# Filtering BCF/VCF file
+
+Biallelic snps only:
+
+``` bash
+bcftools view -m2 -M2 -v snps $INFILE.bcf -Ob -o $OUTFILE.snps.bcf
+```
+
+Missingness:
+
+``` bash
+bcftools -i 'F_MISSING<0.2'$INFILE.bcf -Ob -o $OUTFILE.Fmiss0.2.bcf #Maximum 20% of genotypes missing per site allowed
+bcftools -i 'F_MISSING=0'$INFILE.bcf -Ob -o $OUTFILE.Fmiss0.bcf #No missing genotypes allowed
+```
+
+Only including sites covered in at least two samples:
+
+``` bash
+bcftools view -i 'count(GT="./.")<(N_SAMPLES-1)' $INFILE.bcf -Ob -o $OUTFILE.snps.bcf
 ```

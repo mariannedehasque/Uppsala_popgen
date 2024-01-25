@@ -88,9 +88,9 @@ while read line
 do
   BAM=$(basename $line)
   NAME=$(echo $BAM| cut -d "." -f1)
-  samtools view -ob ${TMPDIR}/${NAME}_NC_056079.1.bam $line NC_056079.1
-  echo "${TMPDIR}/${NAME}_NC_056079.1.bam" >> ${TMPDIR}/filelist.txt
-  echo "${NAME}_NC_056079.1.bam" >> ${TMPDIR}/filelist2.txt
+  samtools view -bh $line $CHROM > ${TMPDIR}/${NAME}_${CHROM}.bam
+  echo "${TMPDIR}/${NAME}_${CHROM}.bam" >> ${TMPDIR}/filelist.txt
+  echo "${NAME}_${CHROM}.bam" >> ${TMPDIR}/filelist2.txt
 done < $INPUTFILE
 
 # main tree
@@ -103,10 +103,20 @@ angsd -bam ${TMPDIR}/filelist.txt \
 -doMajorMinor 1 \
 -uniqueOnly 1 \
 -remove_bads 1 \
--minInd 87 \
+-minInd 99 \
 -nThreads 16 \
 -sites $SITESFILE \
 -out $DIR/$INPUT
 
 date
+
+# transform matrix to FastME format
+# here use a list of bams with only names and no file paths
+echo "transforming to fastme format"
+
+(echo '110'
+paste -d" " ${TMPDIR}/filelist2.txt <(sed -e 's/\t/  /g' ${DIR}/${INPUT}_${CHROM}.ibsMat)
+echo "")> ${DIR}/${INPUT}_${CHROM}_fastme.ibsMat
 ```
+
+Works like a charm. To add option to make minInd and echo not hardcoded.
