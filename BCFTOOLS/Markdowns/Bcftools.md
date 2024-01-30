@@ -4,9 +4,12 @@ Bcftools
 
 - [Genotyping](#genotyping)
   - [Bcftools mpileup](#bcftools-mpileup)
-  - [Quality filtering](#quality-filtering)
-- [Quality control](#quality-control)
-- [Filtering BCF/VCF file](#filtering-bcfvcf-file)
+  - [Filtering](#filtering)
+  - [Quality control single BCF
+    files](#quality-control-single-bcf-files)
+- [Merging BCF files](#merging-bcf-files)
+  - [Filtering](#filtering-1)
+  - [Quality control](#quality-control)
 
 # Genotyping
 
@@ -55,7 +58,7 @@ bcftools index -o $OUTDIR/${OUTPUT_VCF}.Q30.sorted.bcf.csi $OUTDIR/${OUTPUT_VCF}
 bcftools stats $OUTDIR/${OUTPUT_VCF}.Q30.sorted.bcf > $OUTDIR/stats/bcf_sorted/${OUTPUT_VCF}.Q30.sorted.bcf.stats.txt
 ```
 
-## Quality filtering
+## Filtering
 
 ``` bash
 
@@ -105,7 +108,7 @@ bcftools index $OUTDIR/${OUTPUT_VCF}.Q30.sorted.G5.D3.noIndel.annot.repma.bcf
 bcftools stats $OUTDIR/${OUTPUT_VCF}.Q30.sorted.G5.D3.noIndel.annot.repma.bcf > $OUTDIR/stats/bcf_repma/${OUTPUT_VCF}.Q30.sorted.G5.D3.noIndel.annot.repma.bcf.stats.txt
 ```
 
-# Quality control
+## Quality control single BCF files
 
 Obtaining statistics per `bcf file`:
 
@@ -143,9 +146,43 @@ DIR=''
 multiqc -f $DIR/stats/ -o $DIR/stats/multiqc
 ```
 
-Inspecting missingness per individual:
+# Merging BCF files
 
-# Filtering BCF/VCF file
+``` bash
+#!/bin/bash -l
+#SBATCH -A uppmax2023-2-31 -M snowy
+#SBATCH -p core -n 10
+#SBATCH -J bcftools_merge
+#SBATCH -t 2-00:00:00
+
+#Load modules
+module load bioinfo-tools bcftools/1.14 samtools/1.14
+module load BEDTools/2.29.2
+module load tabix/0.2.6
+
+outdir="/proj/sheep_processing/private/marianne/VCF"
+files_to_merge="/proj/sheep_processing/private/marianne/VCF/argali.list"
+bfile="Mouflon_goat_domestic_argali.Q30.sorted.G5.D3.noIndel.annot.repma"
+autos="/proj/snic2020-2-10/private/Data/Non-Human/Animals/sheep/ref_seqs/ARS-UI_Ramb_v2.0/RepeatMasker/GCF_016772045.1_ARS-UI_Ramb_v2.0_genomic.autos.bed"
+
+#Merge bcf files into one bcf file, allowing multiallelic SNP records
+cat $files_to_merge | xargs bcftools merge -m snps --threads 10 -Ob -o $outdir/$bfile.bcf
+bcftools index $outdir/$bfile.bcf
+
+#Biallelic SNPS only
+bcftools view -m2 -M2 -v snps $outdir/$bfile.bcf -Ob -o $outdir/$bfile.snps.bcf
+bcftools index $outdir/$bfile.snps.bcf
+
+#Extract autosomes
+bcftools view $outdir/$bfile.snps.bcf -R $autos -O b -o $outdir/${bfile}.snps.autos.bcf
+bcftools index $outdir/${bfile}.snps.autos.bcf
+
+#Extract chromosome X
+bcftools view $outdir/$bfile.snps.bcf -r NC_056080.1 -O b -o $outdir/$bfile.snps.chrX.bcf
+bcftools index $outdir/$bfile.snps.chrX.bcf
+```
+
+## Filtering
 
 Biallelic snps only:
 
@@ -160,8 +197,31 @@ bcftools -i 'F_MISSING<0.2'$INFILE.bcf -Ob -o $OUTFILE.Fmiss0.2.bcf #Maximum 20%
 bcftools -i 'F_MISSING=0'$INFILE.bcf -Ob -o $OUTFILE.Fmiss0.bcf #No missing genotypes allowed
 ```
 
-Only including sites covered in at least two samples:
+Only including sites covered in at least two samples (alternative to
+Fmiss):
 
 ``` bash
 bcftools view -i 'count(GT="./.")<(N_SAMPLES-1)' $INFILE.bcf -Ob -o $OUTFILE.snps.bcf
+```
+
+Removing samples from merged BCF file
+
+``` bash
+bcftools view -S ^$FILE.txt -Ob -o $OUTFILE.bcf
+```
+
+Options:
+
+- -S, –samples-file: File of sample names to include or exclude if
+  prefixed with “^”. One sample per line.
+- -s, –samples : Comma-separated list of samples to include or exclude
+  if prefixed with “^.”
+
+## Quality control
+
+Inspecting missingness per individual:
+
+``` bash
+
+vcftools --bcf ${SAMPLE}.bcf --missing-indv > stats/${SAMPLE}
 ```
