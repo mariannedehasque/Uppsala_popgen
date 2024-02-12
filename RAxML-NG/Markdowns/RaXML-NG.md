@@ -88,8 +88,11 @@ bcftools view -Oz -o ${OUTDIR}/${FILE}.subset2M.${1}.vcf.gz $TMPDIR/${FILE}.subs
 bcftools index ${OUTDIR}/${FILE}.subset2M.${1}.vcf.gz
 ```
 
-`Next up, the subsampled file is split per file as described above. To convert the`vcf.gz`file to fasta the following script is used:`BCF2FASTA.all.py`. This script does exactly the same as the other script mentioned above, but does not split the`vcf.gz\`
-file into different chromosomes.
+Next up, the subsampled file is split per file as described above. To
+convert the `vcf.gz` file to fasta the following script is used:
+`BCF2FASTA.all.py`. This script does exactly the same as the other
+script mentioned above, but does not split the `vcf.gz` file into
+different chromosomes.
 
 ## Running RAxML-NG
 
