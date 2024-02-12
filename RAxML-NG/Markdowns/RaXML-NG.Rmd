@@ -11,7 +11,8 @@ date: "2024-01-17"
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Preparing input files
+## Build phylogenetic tree per chromosome
+### Preparing input files
 
 First, the merged and filtered bcf file (`Mouflon_domesticated.Q30.sorted.G5.D3.noIndel.annot.repma.Fmiss0.2.snps.autos.bcf`) must be split per sample using following script: `bcftools_samples.sh`. This will result in one `Q30.sorted.G5.D3.noIndel.annot.repma.Fmiss0.2.snps.autos.vcf.gz` file per sample)
 
@@ -26,6 +27,11 @@ The script does the following:  \
     + Genotype 1/1 get translated into alt allele \
     + Missing genotypes get translated as "N" \
 * Generate a fasta file per chromosome
+
+To run the script for e.g. sample ARG10-4:
+```{bash, eval = FALSE}
+python BCF2FASTA.all.py ARG10-4.Q30.sorted.G5.D3.noIndel.annot.repma.snps.autos.Fmiss0.1.subset2M.1.vcf.gz ARG10-4
+```
 
 Running the script results in a fasta file per chromosome (e.g. `Corsica-1_NC_056054.1.fasta`). The header of the fasta file will be the sample name. 
 
@@ -48,6 +54,19 @@ CTCGTNTACCGTACCATTCAATTATTTACCCCGACTGTTTTGGTAACGCCTATCCGCTTT
 TCACCGCTGCGAGACCAGTCAACTCGAGGTAGGGTTCGGGCGGGGGGCCTATCACGCCCG
 
 ```
+## Build phylogenetic tree for randomly sampled SNPs
+### Preparing input files
+If runnning per chromosome takes too long, subsampling a set of SNPs could be an alternative strategy.
+
+First, subsample SNPs using script `vcflib_subset.sh`. This script is run multiple times, to test for potentil biases introduced by subsampling. 
+
+```{bash, eval = FALSE}
+bcftools view ${INDIR}/${FILE}.bcf | vcfrandomsample -r 0.035087719 > $TMPDIR/${FILE}.subset2M.${1}.vcf
+bcftools view -Oz -o ${OUTDIR}/${FILE}.subset2M.${1}.vcf.gz $TMPDIR/${FILE}.subset2M.${1}.vcf
+bcftools index ${OUTDIR}/${FILE}.subset2M.${1}.vcf.gz
+```
+`
+Next up, the subsampled file is split per file as described above. To convert the `vcf.gz` file to fasta the following script is used: `BCF2FASTA.all.py`. This script does exactly the same as the other script mentioned above, but does not split the `vcf.gz` file into different chromosomes.
 
 ## Running RAxML-NG
 

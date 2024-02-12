@@ -212,8 +212,9 @@ Options:
 Inspecting missingness per individual:
 
 ```{bash, eval = FALSE}
+module load vcftools
 
-vcftools --bcf ${SAMPLE}.bcf --missing-indv > stats/${SAMPLE}
+vcftools --bcf ${SAMPLE}.bcf --missing-indv --out stats/${SAMPLE}
 
 ```
 
