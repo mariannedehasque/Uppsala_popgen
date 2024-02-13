@@ -80,5 +80,5 @@ K = {1..15}
 Start the 20 runs as follows:
 
 ```{bash, eval = FALSE}
-for run in {1..20}; do bash /proj/snic2020-2-10/private/Analyses/marianne/PROJECTS/EuropeanMouflon/SCRIPTS/ADMIXTURE.sh $run; done
+for run in 1 2; do bash /proj/snic2020-2-10/private/Analyses/marianne/PROJECTS/EuropeanMouflon/SCRIPTS/ADMIXTURE_wrapper.sh $run; done
 ```
