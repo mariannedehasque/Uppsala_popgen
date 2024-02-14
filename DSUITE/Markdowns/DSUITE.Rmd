@@ -131,3 +131,24 @@ TRIO="/proj/snic2020-2-10/private/Analyses/marianne/PROJECTS/EuropeanMouflon/DSU
 
 $Dsuite Dinvestigate -w 50,25 Sarda_Nera_Montes_Ogliastra_Corsica_Argali.Q30.sorted.G5.D3.noIndel.annot.repma.autos.snps.Fmiss0.1.vcf.gz $SETS $TRIO
 ```
+
+Annotate introgessed regions using SNPeff.
+Merge snpeff annotation and original BED file.
+Extract 1% (or 0.1%) top results.
+
+awk '{print $6}' Sarda_Nera_Sardinia_localFstats__50_25.merged.annotated.bed | sort -n | awk 'BEGIN{c=0} length($0){a[c]=$0;c++}END{p5=(c/100*1); p5=p5%1?int(p5)+1:p5; print a[c-p5-1]}' (find top 1% outliers)
+awk '$6>=0.630046' Sarda_Nera_Sardinia_localFstats__50_25.merged.annotated.bed | grep -o -P '.Gene.{0,50}' | cut -d ":" -f2 | sort | uniq (top 1%)
+
+awk '{print $6}' Sarda_Nera_Sardinia_localFstats__50_25.merged.annotated.bed | sort -n | awk 'BEGIN{c=0} length($0){a[c]=$0;c++}END{p5=(c/100*0.1); p5=p5%1?int(p5)+1:p5; print a[c-p5-1]}' (find top 0.1% outliers)
+awk '$6>=0.805553' Sarda_Nera_Sardinia_localFstats__50_25.merged.annotated.bed | grep -o -P '.Gene.{0,50}' | cut -d ":" -f2 | sort | uniq
+
+Translate genes with ensemble biomart:
+https://www.ensembl.org/biomart/martview/0d326bb001e275076ec0b17a8c25a189
+
+Use gene names in GOrilla:
+https://cbl-gorilla.cs.technion.ac.il/GOrilla/h6ptkz0c/GOResults.html#genes_info
+
+Find GO enrichment!
+
+![Results of GO analysis using Rattus norvegicus as reference](/Users/marianne/github/EuropeanMouflon/DSUITE/Results/240214_GOrilla.png)
+

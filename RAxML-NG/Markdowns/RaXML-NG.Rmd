@@ -73,6 +73,12 @@ for sample in ARG10-4 ARG19 ARG20 ARG2-1 ARG3-1 ARG8-2 Corsica-11 Corsica-7 Cors
 
 Next up, the subsampled file is split per file as described above. To convert the `vcf.gz` file to fasta the following script is used: `BCF2FASTA.all.py`. This script does exactly the same as the other script mentioned above, but does not split the `vcf.gz` file into different chromosomes.
 
+Individual files are concatenated again to generate a msa file. Note that this python script does not add a newline at the file, which still has to be added now when concatenating. For example as follows:
+
+```{bash, eval = FALSE}
+for file in subset2M.3/*.fasta; do cat "$file";echo   ; done > Mouflon_goat_domestic_argali_2M.3.fasta
+```
+
 ## Running RAxML-NG
 
 RAxML-NG is a phylogenetic tree inference tool which uses maximum-likelihood (ML) optimality criterion. Its search heuristic is based on iteratively performing a series of Subtree Pruning and Regrafting (SPR) moves, which allows to quickly navigate to the best-known ML tree. RAxML-NG is a successor of RAxML (Stamatakis 2014) and leverages the highly optimized likelihood computation implemented in libpll (Flouri et al. 2014).
