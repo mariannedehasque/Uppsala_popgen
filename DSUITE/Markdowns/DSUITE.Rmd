@@ -150,5 +150,5 @@ https://cbl-gorilla.cs.technion.ac.il/GOrilla/h6ptkz0c/GOResults.html#genes_info
 
 Find GO enrichment!
 
-![Results of GO analysis using Rattus norvegicus as reference](github/EuropeanMouflon/DSUITE/Results/240214_GOrilla.png)
+![Results of GO analysis using Rattus norvegicus as reference](EuropeanMouflon/DSUITE/Results/240214_GOrilla.png)
 
