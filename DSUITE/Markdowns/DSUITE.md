@@ -152,8 +152,8 @@ Use gene names in GOrilla:
 Find GO enrichment!
 
 <figure>
-<img
-src="/Users/marianne/github/EuropeanMouflon/DSUITE/Results/240214_GOrilla.png"
-alt="Alt Text" />
-<figcaption aria-hidden="true">Alt Text</figcaption>
+<img src="../Results/240214_GOrilla.png"
+alt="Results of GO analysis using Rattus norvegicus as reference" />
+<figcaption aria-hidden="true">Results of GO analysis using Rattus
+norvegicus as reference</figcaption>
 </figure>
