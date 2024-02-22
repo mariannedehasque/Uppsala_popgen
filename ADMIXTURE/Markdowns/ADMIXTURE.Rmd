@@ -98,3 +98,35 @@ result <- calculate_mean_and_sd("~/Library/CloudStorage/OneDrive-Personal/CTS/Rs
 print(result)
 
 ```
+
+## PONG
+
+To visualise results PONG can be used. Pong can be downloaded directly to UPPMAX from the internet.
+
+To run PONG, following input files are necessary:
+
+* Qmap file. This file consists of three tab-delimited columns. The first column is the unique run ID (e.g. R1K3), the second columns the K value (e.g. 3), and the third column the path to the .Q file, relative to the Qmap file. (e.g. /run1/Sheep.pruned.Q)
+* ind2pop file. This file contains the annotation for the analysis. PONG will cluster individuals based on the information given in this file. Each sample descriptor is given on a new line.
+* (Optional) a file with the colours to be used in PONG. Each colour is given on a separate line.
+
+To generate the Qmap file, following code can be run:
+
+```{R, eval = FALSE}
+ls run*/*.Q | awk -F'[/.]' '{k=$(NF-1); printf "%sK%s\t%s\t%s\n", $1, k, k, $0}' > Qmapfile.txt
+
+```
+
+PONG is then run as follows:
+
+```{R, eval = FALSE}
+pong -m Qmapfile.txt -i ind2pop.txt -l color.txt
+```
+
+
+To visualize the results locally, we first need to establish a connection with or local computer. On the terminal on local machine (i.e. not logged into UPPMAX), input the following:
+
+```{R, eval = FALSE}
+ssh -N -L 4000:localhost:4000 marideha@rackham1.uppmax.uu.se
+```
+
+This should give a prompt for your password. Leave it hanging after the password is given and go to localhost:4000 using any browser.
