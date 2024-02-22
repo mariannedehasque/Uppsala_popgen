@@ -81,5 +81,22 @@ K = {1..15}
 Start the 20 runs as follows:
 
 ``` bash
-for run in {1..20}; do bash /proj/snic2020-2-10/private/Analyses/marianne/PROJECTS/EuropeanMouflon/SCRIPTS/ADMIXTURE.sh $run; done
+for run in 1 2; do bash /proj/snic2020-2-10/private/Analyses/marianne/PROJECTS/EuropeanMouflon/SCRIPTS/ADMIXTURE_wrapper.sh $run; done
+```
+
+Calculate Cross validation mean and standard error using R.
+
+First extract the CV values of each run (grep “CV” \*out). Reformat
+using awk or excel into a tab-delimited column, with the first column
+representing the K value and the second the CV value.
+
+``` r
+calculate_mean_and_sd <- function(file_path) {
+  data <- read.table(file_path, header = TRUE)  # Assuming the file is tab-separated
+  result <- aggregate(CV ~ K, data = data, FUN = function(x) c(mean = mean(x), sd = sd(x)))
+  return(result)
+}
+
+result <- calculate_mean_and_sd("~/Library/CloudStorage/OneDrive-Personal/CTS/Rscripts/ADMIXTURE/CV.txt")
+print(result)
 ```

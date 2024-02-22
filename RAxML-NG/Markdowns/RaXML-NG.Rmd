@@ -73,11 +73,7 @@ for sample in ARG10-4 ARG19 ARG20 ARG2-1 ARG3-1 ARG8-2 Corsica-11 Corsica-7 Cors
 
 Next up, the subsampled file is split per file as described above. To convert the `vcf.gz` file to fasta the following script is used: `BCF2FASTA.all.py`. This script does exactly the same as the other script mentioned above, but does not split the `vcf.gz` file into different chromosomes.
 
-Individual files are concatenated again to generate a msa file. Note that this python script does not add a newline at the file, which still has to be added now when concatenating. For example as follows:
-
-```{bash, eval = FALSE}
-for file in subset2M.3/*.fasta; do cat "$file";echo   ; done > Mouflon_goat_domestic_argali_2M.3.fasta
-```
+Individual files are concatenated again to generate a msa file.
 
 ## Running RAxML-NG
 
@@ -116,6 +112,8 @@ CHROM=${1}
 raxml-ng --msa ../${CHROM}.concatenated.fasta --all --bs-trees 100 -model GTR+G --prefix ${CHROM} --outgroup BAT_IOSW_r1 --threads 8 --seed 2
 ```
 
+## PONG analysis
 
+Where's the git at?
 
 
