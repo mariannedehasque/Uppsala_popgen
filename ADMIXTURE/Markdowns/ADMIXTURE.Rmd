@@ -125,7 +125,7 @@ pong -m Qmapfile.txt -i ind2pop.txt -l color.txt
 ```
 
 
-To visualize the results locally, we first need to establish a connection with or local computer. On the terminal on local machine (i.e. not logged into UPPMAX), input the following:
+To visualize the results locally, we first need to establish a connection between remote and local. On the terminal on local machine (i.e. not logged into UPPMAX), input the following:
 
 ```{R, eval = FALSE}
 ssh -N -L 4000:localhost:4000 marideha@rackham1.uppmax.uu.se
