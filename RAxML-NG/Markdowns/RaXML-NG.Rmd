@@ -112,8 +112,7 @@ CHROM=${1}
 raxml-ng --msa ../${CHROM}.concatenated.fasta --all --bs-trees 100 -model GTR+G --prefix ${CHROM} --outgroup BAT_IOSW_r1 --threads 8 --seed 2
 ```
 
-## PONG analysis
 
-Where's the git at?
+
 
 
