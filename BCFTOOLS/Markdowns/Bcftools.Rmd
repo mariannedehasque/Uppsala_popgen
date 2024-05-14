@@ -188,8 +188,8 @@ bcftools view -m2 -M2 -v snps $INFILE.bcf -Ob -o $OUTFILE.snps.bcf
 ```
 Missingness:
 ```{bash, eval = FALSE}
-bcftools -i 'F_MISSING<0.2'$INFILE.bcf -Ob -o $OUTFILE.Fmiss0.2.bcf #Maximum 20% of genotypes missing per site allowed
-bcftools -i 'F_MISSING=0'$INFILE.bcf -Ob -o $OUTFILE.Fmiss0.bcf #No missing genotypes allowed
+bcftools view -i 'F_MISSING<0.2'$INFILE.bcf -Ob -o $OUTFILE.Fmiss0.2.bcf #Maximum 20% of genotypes missing per site allowed
+bcftools view -i 'F_MISSING=0'$INFILE.bcf -Ob -o $OUTFILE.Fmiss0.bcf #No missing genotypes allowed
 ```
 Only including sites covered in at least two samples (alternative to Fmiss):
 ```{bash, eval = FALSE}
