@@ -193,8 +193,8 @@ bcftools view -m2 -M2 -v snps $INFILE.bcf -Ob -o $OUTFILE.snps.bcf
 Missingness:
 
 ``` bash
-bcftools -i 'F_MISSING<0.2'$INFILE.bcf -Ob -o $OUTFILE.Fmiss0.2.bcf #Maximum 20% of genotypes missing per site allowed
-bcftools -i 'F_MISSING=0'$INFILE.bcf -Ob -o $OUTFILE.Fmiss0.bcf #No missing genotypes allowed
+bcftools view -i 'F_MISSING<0.2'$INFILE.bcf -Ob -o $OUTFILE.Fmiss0.2.bcf #Maximum 20% of genotypes missing per site allowed
+bcftools view -i 'F_MISSING=0'$INFILE.bcf -Ob -o $OUTFILE.Fmiss0.bcf #No missing genotypes allowed
 ```
 
 Only including sites covered in at least two samples (alternative to
@@ -202,6 +202,13 @@ Fmiss):
 
 ``` bash
 bcftools view -i 'count(GT="./.")<(N_SAMPLES-1)' $INFILE.bcf -Ob -o $OUTFILE.snps.bcf
+```
+
+MAF filters:
+
+``` bash
+#The :minor is necessary to filter for minor allele frequency, not non-reference frequency
+bcftools view -q 0.05:minor $FILE.bcf -Ob -o $FILE.maf005.bcf
 ```
 
 Removing samples from merged BCF file
@@ -222,6 +229,7 @@ Options:
 Inspecting missingness per individual:
 
 ``` bash
+module load vcftools
 
-vcftools --bcf ${SAMPLE}.bcf --missing-indv > stats/${SAMPLE}
+vcftools --bcf ${SAMPLE}.bcf --missing-indv --out stats/${SAMPLE}
 ```
