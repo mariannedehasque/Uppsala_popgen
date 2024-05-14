@@ -1,0 +1,17 @@
+---
+title: "RelatedIBD"
+output: 
+  github_document:
+    toc: true
+    toc_depth: 3
+date: "2024-05-14"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## PHASING
+### Beagle
+### SHAPEIT
+
