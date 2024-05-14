@@ -196,6 +196,12 @@ Only including sites covered in at least two samples (alternative to Fmiss):
 bcftools view -i 'count(GT="./.")<(N_SAMPLES-1)' $INFILE.bcf -Ob -o $OUTFILE.snps.bcf
 ```
 
+MAF filters:
+```{bash, eval = FALSE}
+#The :minor is necessary to filter for minor allele frequency, not non-reference frequency
+bcftools view -q 0.05:minor $FILE.bcf -Ob -o $FILE.maf005.bcf
+```
+
 Removing samples from merged BCF file
 
 ```{bash, eval = FALSE}
