@@ -1,3 +1,3 @@
-# EuropeanMouflon
+# Uppsala popgen
 
-Repository to track analyses for European Mouflon project
+Repository to document analyses performed for the Uppsala sheep project
