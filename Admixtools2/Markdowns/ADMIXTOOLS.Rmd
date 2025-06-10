@@ -1,0 +1,54 @@
+---
+title: "ADMIXTOOLS"
+output: 
+  github_document:
+    toc: true
+    toc_depth: 3
+date: "2025-06-10"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r fix-pandoc-path, include=FALSE}
+Sys.setenv(PATH = paste("/opt/homebrew/bin", Sys.getenv("PATH"), sep = ":"))
+Sys.setenv(RSTUDIO_PANDOC = "/opt/homebrew/bin")
+```
+
+
+## Preparing INPUT files
+
+Prepare the input:
+
+```{bash, eval = FALSE}
+ml bioinfo-tools plink/1.90b4.9
+
+INDIR=/cfs/klemming/projects/supr/sllstore2017093/mammoth/marianne/GIT/data_BCM/ANGSD/haplo/
+OUTDIR=/cfs/klemming/projects/supr/sllstore2017093/mammoth/marianne/GIT/data_BCM/ADMIXTOOLS/Chukochya
+
+#autosomes
+plink -bfile $INDIR/BCM.SampleID.snps.NewChr.autos.Orient.LDprune --update-ids $OUTDIR/SUBSET.txt --make-bed --allow-extra-chr --chr-set 27 --out $OUTDIR/BCM.SampleID.snps.NewChr.autos.Orient.LDprune.SUBSET
+
+```
+
+## Extract F2
+
+
+```{R, eval = FALSE}
+setwd("/cfs/klemming/projects/supr/sllstore2017093/mammoth/marianne/GIT/data_BCM/ADMIXTOOLS/Chukochya")
+
+library(admixtools)
+library(ggplot2)
+#library(gridExtra)
+
+DIR="/cfs/klemming/projects/supr/sllstore2017093/mammoth/marianne/GIT/data_BCM/ADMIXTOOLS/Chukochya/f2_statistics"
+
+population_subset<-c("Krestovka", "Siberia", "MCol_Wyoming", "Lafricana", "Mprim_Wyoming","Mprim_Alaska", "BC25.3K", "BC34.7K", "Chukochya")
+
+extract_f2("/cfs/klemming/projects/supr/sllstore2017093/mammoth/marianne/GIT/data_BCM/ADMIXTOOLS/Chukochya/BCM.SampleID.snps.NewChr.autos.Orient.LDprune.SUBSET",
+           DIR,pops=population_subset, overwrite=TRUE,auto_only = FALSE,qpfstats = TRUE)
+
+
+f2_blocks = f2_from_precomp(DIR)
+```
+
