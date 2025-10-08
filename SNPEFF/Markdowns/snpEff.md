@@ -20,7 +20,6 @@ dir='/proj/snic2020-2-10/private/Data/Non-Human/Animals/sheep/BAM_files/ARS-UI_R
 cd $dir
 
 gffread $gtf -F -V -g $ref -T -o GCF_016772045.1_ARS-UI_Ramb_v2.0.filtered.gtf
-gffread $gtf -F -V -g $ref -o GCF_016772045.1_ARS-UI_Ramb_v2.0.filtered.gff
 ```
 
 Flags:
@@ -54,7 +53,7 @@ snpEff='/proj/snic2020-2-10/private/Data/Non-Human/Animals/sheep/ref_seqs/ARS-UI
 #prepare db build with soft links
 ln -s $gtf ${data_dir}/ARS-UI_Ramb_v2.0/genes.gtf &&
 ln -s $ref ${data_dir}/ARS-UI_Ramb_v2.0/sequences.fa &&
-ln -s $prot ${data_dir}/ARS-UI_Ramb_v2.0/protein.fa.gz &&
+ln -s $prot ${data_dir}/ARS-UI_Ramb_v2.0/protein.fa &&
 ln -s $cds ${data_dir}/ARS-UI_Ramb_v2.0/cds.fa.gz
 
 #update snpEff config
