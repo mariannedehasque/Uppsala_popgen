@@ -64,7 +64,9 @@ echo 'ARS-UI_Ramb_v2.0.genome : ARS-UI_Ramb_v2.0' >> ${db_dir}/snpEff.config
 #build snpEff database
 cd $db_dir
 
-java -jar ${snpEff}.jar build -gtf22 -v ARS-UI_Ramb_v2.0 -noCheckCds -noCheckProtein
+java -jar ${snpEff}.jar build -gtf22 -v ARS-UI_Ramb_v2.0
+#or
+#java -jar ${snpEff}.jar build -gtf22 -v ARS-UI_Ramb_v2.0 -noCheckCds -noCheckProtein
 ```
 
 Building the database can be tricky, so make sure to check the
